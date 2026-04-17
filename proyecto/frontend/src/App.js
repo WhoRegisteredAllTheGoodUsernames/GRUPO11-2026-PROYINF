@@ -10,6 +10,9 @@ import ConfirmarSolicitud from "./vistas/ConfirmarSolicitud";
 import IniciarFirma from './vistas/iniciarFirma';
 import HistorialSimulaciones from './vistas/HistorialSimulaciones';
 import HistorialPrestamos from './vistas/HistorialPrestamos';
+//Nuevo para ingesof
+import GuestMode from './vistas/GuestMode';
+import GuestModeSimulacion from './vistas/GuestModeSimulacion';
 
 
 //import logo from './logo.svg';
@@ -35,6 +38,8 @@ function App() {
 				<Route path="/iniciar-firma" element={<IniciarFirma/>}/>
 				<Route path="/historialSimulaciones" element={<HistorialSimulaciones />} />
 				<Route path="/historialPrestamos" element={<HistorialPrestamos />} />
+				<Route path="/guestMode" element={<GuestMode />} />
+				<Route path="/guestModeSimulacion" element={<GuestModeSimulacion />} />
 
 			</Routes>
 	  </Router>

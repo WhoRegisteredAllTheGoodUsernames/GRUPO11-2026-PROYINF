@@ -12,24 +12,23 @@ const simulacionSolicitudRoutes = require('./src/routes/simulacion_y_solicitud_r
 const docusignRutas = require('./src/routes/docusignRutas');
 const historialSimRutas = require('./src/routes/historialSimRoutes');
 const historialPrestamosRoutes = require("./src/routes/historialPrestamosRoutes");
-
+//Nuevo para INGESOF:
+const guestRoutes = require('./src/routes/guestRoutes');
 
 
 crearTablas(pool);
 iniciarMiddleware(express, app);
 iniciarRutas(app);
-//Nuevas rutas:
+
 app.use('/', simulacionSolicitudRoutes);
 app.use('/historialSimulaciones', historialSimRutas);
 app.use("/historialPrestamos", historialPrestamosRoutes);
 app.use('/api/docusign', docusignRutas);
+//Nuevo para INGESOF:
+app.use('/guestMode', guestRoutes);
 
-// Lo ocupe para probar el ngrok no mais
-app.get('/', (req, res)=> {
-    res.status(200).send('wena ctmmmm </h1>');
-})
 
-console.log("HOLA desde index.js");
+
 
 app.listen(port, () => {
     console.log(`App corriendo en http://localhost:${port}`);

@@ -1,20 +1,3 @@
-//import {back_dir} from '../backend';
-/*
-const dirs = ["registro", "login", "simulacion", "mod_scoring"];
-var urls = [];
-
-dirs.forEach((item, index) => {
-	urls.push(<a href={"/" + item}>{item}</a>);
-	urls.push(" ");
-});
-
-export default function Index(){
-	return (
-	<div id="index">
-		{urls}
-	</div>
-	);
-} ESTO ESTABA EN UN PRINCIPIO PERO ME DIO MIEDITO BORRARLO XD */ 
 // Separe el header en una navbar aparte para recortar un poco el codigo y simplificarlo importandolo donde se necesite
 import Navbar from "./navbar";
 import React , { useState, useEffect } from "react";
@@ -24,6 +7,7 @@ const dirs = [
   	{ path: "simulacion", label: "Simular préstamo" },
   	{ path: "historialSimulaciones", label: "Historial de simulaciones" },
 	{ path: "historialPrestamos", label: "Mis créditos" },
+	{ path: "guestMode", label: "Guest Mode" },
 ];
 
 
