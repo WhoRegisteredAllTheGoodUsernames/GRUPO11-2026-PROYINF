@@ -13,6 +13,8 @@ import HistorialPrestamos from './vistas/HistorialPrestamos';
 //Nuevo para ingesof
 import GuestMode from './vistas/GuestMode';
 import GuestModeSimulacion from './vistas/GuestModeSimulacion';
+import SeleccionMetodoDatos from "./vistas/SeleccionMetodoDatos";
+import PdfDatosCliente from "./vistas/PDFDatosCliente";
 
 
 //import logo from './logo.svg';
@@ -33,7 +35,9 @@ function App() {
 				<Route path="/mod_scoring" element={<ModScoring />} />
 				<Route path="/resultadoSimulacion" element={<ResultadoSimulacion />} />
 				<Route path="/solicitud/:idSimulacion" element={<Solicitud />} />
-				<Route path="/solicitud/:idSimulacion/datos" element={<DatosClienteSolicitud />} />
+				<Route path="/solicitud/:idSimulacion/datos" element={<SeleccionMetodoDatos />} />
+				<Route path="/solicitud/:idSimulacion/datos/manual" element={<DatosClienteSolicitud />} />
+				<Route path="/solicitud/:idSimulacion/datos/pdf" element={<PdfDatosCliente />} />
 				<Route path="/solicitud/:idSimulacion/confirmar" element={<ConfirmarSolicitud />} />
 				<Route path="/iniciar-firma" element={<IniciarFirma/>}/>
 				<Route path="/historialSimulaciones" element={<HistorialSimulaciones />} />

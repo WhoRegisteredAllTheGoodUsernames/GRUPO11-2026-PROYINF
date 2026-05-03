@@ -2,6 +2,7 @@
 const pool = require('../db/db');
 const scoring = require('./aplicarScoring');
 const modeloScoring = require('../models/scoring');
+const { parsePDF } = require('../utils/pdfParser');
 
 /**
  * Controlador para mostrar los datos de una simulación y permitir iniciar la solicitud.
@@ -37,6 +38,34 @@ const verSimulacion = async (req, res) => {
   } catch (error) {
     console.error('Error en verSimulacion:', error);
     res.status(500).json({ error: 'Error interno del servidor' });
+  }
+};
+
+
+const subirPDFCliente = async (req, res) => {
+  try {
+    // 1️⃣ Verificar sesión
+    if (!req.session.user) {
+      return res.status(401).json({ error: 'Usuario no autenticado' });
+    }
+
+    // 2️⃣ Verificar archivo
+    if (!req.file) {
+      return res.status(400).json({ error: 'No se envió ningún archivo PDF' });
+    }
+
+    // 3️⃣ Procesar PDF
+    const datos = await parsePDF(req.file.buffer);
+
+    // 4️⃣ Retornar datos extraídos
+    res.status(200).json({
+      message: 'PDF procesado correctamente',
+      datos
+    });
+
+  } catch (error) {
+    console.error('Error en subirPDFCliente:', error);
+    res.status(500).json({ error: 'Error al procesar el PDF' });
   }
 };
 
@@ -352,5 +381,6 @@ module.exports = {
   verDatosCliente,
   actualizarDatosYScoring,
   confirmarSolicitud,
-  procesarConfirmacion
+  procesarConfirmacion,
+  subirPDFCliente
 };

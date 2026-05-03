@@ -30,6 +30,7 @@ export default function Navbar() {
         }
 		localStorage.removeItem("usuario_sesion");
 		setUser(null);
+        window.location.reload();
 		navigate("/")
 	}
 

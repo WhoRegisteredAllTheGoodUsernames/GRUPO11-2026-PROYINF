@@ -93,7 +93,15 @@ export default function Index() {
 
 				{/* botones */}
 				<div style={{ display: "flex", gap: "clamp(15px, 3vw, 20px)", flexWrap: "wrap", width: "min(90%, 1055px)", justifyContent: "flex-start"}}>
-					{dirs.map((item, index) => (
+					{dirs
+						.filter(item => {
+							if (user) {
+								return item.path !== "guestMode";
+							} else {
+								return item.path === "guestMode";
+							}
+						})
+						.map((item, index) => (
 						<a
 						key={index}
 						href={`/${item.path}`}

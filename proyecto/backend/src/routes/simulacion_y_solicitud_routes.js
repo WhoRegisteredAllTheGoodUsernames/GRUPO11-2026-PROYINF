@@ -1,5 +1,8 @@
 const express = require('express');
 const router = express.Router();
+const multer = require('multer');
+const upload = multer();
+
 
 const registrarSimulacion = require('../controllers/registrarSimulacion');
 const resultadoSimulacion = require('../controllers/resultadoSimulacion');
@@ -49,6 +52,15 @@ router.post('/solicitud/:idSimulacion/datos', async (req, res) => {
 	} catch (error) {
 		console.error('Error al actualizar datos y scoring:', error);
 		res.status(500).send('Error al actualizar datos y scoring');
+	}
+});
+// Lectura del pdf
+router.post('/solicitud/:idSimulacion/pdf', upload.single('pdf'), async (req, res) => {
+	try {
+		await solicitudController.subirPDFCliente(req, res);
+	} catch (error) {
+		console.error('Error al procesar PDF:', error);
+		res.status(500).send('Error al procesar PDF');
 	}
 });
 

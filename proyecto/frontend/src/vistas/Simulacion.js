@@ -30,7 +30,7 @@ export default function Simulacion() {
       navigate("/resultadoSimulacion");
     } catch (error) {
       console.error("❌ Error al simular:", error);
-      alert("Error al procesar la simulación");
+      alert("Error al procesar la simulación"); 
     }
   };
 
@@ -98,7 +98,9 @@ export default function Simulacion() {
           id="simulacion"
           style={{
             maxWidth: "600px",
-            margin: "0 auto 0 25%",
+            //margin: "0 auto 0 25%",
+            margin: 0,
+            marginRight: "5%",
             padding: "10px 30px",
             fontFamily: "Arial, sans-serif",
           }}
