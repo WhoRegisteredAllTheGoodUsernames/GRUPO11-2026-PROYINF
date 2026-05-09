@@ -27,7 +27,7 @@ export default function DatosClienteSolicitud() {
         if (!res.ok) throw new Error("Error al obtener datos del cliente");
 
         const data = await res.json();
-        setCliente(data);
+        setCliente(data.cliente);
       } catch (err) {
         console.error("❌ Error cargando datos:", err);
         setError("No se pudieron cargar los datos del cliente.");
@@ -117,6 +117,25 @@ export default function DatosClienteSolicitud() {
           <h3 style={{ color: "#1C142E", marginBottom: "20px" }}>
             Datos personales
           </h3>
+          <label style={labelStyle}>Nombre completo</label>
+          <input
+            type="text"
+            name="nombre"
+            value={cliente.nombre || ""}
+            onChange={handleChange}
+            style={inputStyle}
+            required
+          />
+
+          <label style={labelStyle}>RUT</label>
+          <input
+            type="text"
+            name="rut"
+            value={cliente.rut || ""}
+            onChange={handleChange}
+            style={inputStyle}
+            required
+          />
           <label style={labelStyle}>Género</label>
             <select
             name="genero"
@@ -132,7 +151,7 @@ export default function DatosClienteSolicitud() {
             </select>
 
 
-          <label style={labelStyle}>Teléfono</label>
+          {/* <label style={labelStyle}>Teléfono</label>
           <input
             type="text"
             name="telefono"
@@ -166,7 +185,7 @@ export default function DatosClienteSolicitud() {
             value={cliente.ciudad || ""}
             onChange={handleChange}
             style={inputStyle}
-          />
+          /> */}
             <label style={labelStyle}>Ingresos mensuales</label>
                 <input
                 type="number"
@@ -177,13 +196,21 @@ export default function DatosClienteSolicitud() {
             />
 
 
-            <label style={labelStyle}>Rubro</label>
+            <label style={labelStyle}>Profesión</label>
             <input
             type="text"
             name="rubro"                
             value={cliente.rubro || ""} 
             onChange={handleChange}
             style={inputStyle}
+            />
+            <label style={labelStyle}>Antigüedad laboral (meses)</label>
+            <input
+              type="number"
+              name="antiguedad"
+              value={cliente.antiguedad || ""}
+              onChange={handleChange}
+              style={inputStyle}
             />
 
 

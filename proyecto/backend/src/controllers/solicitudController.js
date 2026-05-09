@@ -3,6 +3,7 @@ const pool = require('../db/db');
 const scoring = require('./aplicarScoring');
 const modeloScoring = require('../models/scoring');
 const { parsePDF } = require('../utils/pdfParser');
+const { leerCarnet } = require('../utils/ocrCarnet');
 
 /**
  * Controlador para mostrar los datos de una simulación y permitir iniciar la solicitud.
@@ -43,34 +44,99 @@ const verSimulacion = async (req, res) => {
 
 
 const subirPDFCliente = async (req, res) => {
+
+  let datosCarnet = null;
+  let datosLiquidacion = null;
+  let datosAntiguedad = null;
+
   try {
+
     // 1️⃣ Verificar sesión
     if (!req.session.user) {
-      return res.status(401).json({ error: 'Usuario no autenticado' });
+      return res.status(401).json({
+        error: 'Usuario no autenticado'
+      });
     }
 
-    // 2️⃣ Verificar archivo
-    if (!req.file) {
-      return res.status(400).json({ error: 'No se envió ningún archivo PDF' });
+    // 2️⃣ Verificar archivos
+    if (
+      !req.files ||
+      !req.files.carnet ||
+      !req.files.liquidacion ||
+      !req.files.antiguedad
+    ) {
+      return res.status(400).json({
+        error: 'Faltan documentos requeridos'
+      });
     }
 
-    // 3️⃣ Procesar PDF
-    const datos = await parsePDF(req.file.buffer);
+    // 3️⃣ Procesar carnet
+    datosCarnet = await leerCarnet(
+      req.files.carnet[0].path
+    );
 
-    // 4️⃣ Retornar datos extraídos
+    // 4️⃣ Procesar liquidación
+    datosLiquidacion = await parsePDF(
+      req.files.liquidacion[0].path,
+      "liquidacion"
+    );
+
+    // 5️⃣ Procesar antigüedad laboral
+    datosAntiguedad = await parsePDF(
+      req.files.antiguedad[0].path,
+      "antiguedad"
+    );
+
+    // 6️⃣ Combinar datos
+    const datos = {
+      ...datosCarnet,
+      ...datosLiquidacion,
+      ...datosAntiguedad,
+    };
+    /*
+    BORRAR ESTO LUEGO!!!
+    */
+    let advertencia = null;
+
+    if (!datos.genero) {
+
+      datos.genero = "M";
+
+      advertencia =
+        "No se ha leído correctamente el género. " +
+        "El alcance de esta HU es la lectura y no la modificación o corrección de los datos. " +
+        "De momento se utilizará 'M' como predeterminado para estos casos. " +
+        "En la próxima entrega se agregará la HU de modificación y corrección de datos extraídos.";
+    }
+    // 7️⃣ Retornar datos extraídos
     res.status(200).json({
-      message: 'PDF procesado correctamente',
+      message: 'Documentos procesados correctamente',
+      advertencia,
       datos
     });
 
   } catch (error) {
+
     console.error('Error en subirPDFCliente:', error);
-    res.status(500).json({ error: 'Error al procesar el PDF' });
+
+    res.status(500).json({
+
+      error: 'Error al procesar documentos',
+
+      detalle: error.message,
+
+      datosLeidos: {
+        carnet: datosCarnet,
+        liquidacion: datosLiquidacion,
+        antiguedad: datosAntiguedad,
+      },
+
+      archivosRecibidos: req.files
+        ? Object.keys(req.files)
+        : null
+    });
   }
 };
-
-
-
 
 /*
 Este controlador es para ver y actualizar ciertos datos del cliente y poder re calcular el scoring personal.
@@ -86,8 +152,12 @@ const verDatosCliente = async (req, res) => {
     const rutCliente = req.session.user.rut;
 
     // 2️⃣ Consultar datos actuales del cliente
+    // const result = await pool.query(
+    //   'SELECT rut, salario, rubro, genero, email, telefono, scoring FROM cliente WHERE rut = $1',
+    //   [rutCliente]
+    // );
     const result = await pool.query(
-      'SELECT rut, salario, rubro, genero, email, telefono, scoring FROM cliente WHERE rut = $1',
+      'SELECT rut, salario, rubro, genero, scoring FROM cliente WHERE rut = $1',
       [rutCliente]
     );
 
@@ -124,18 +194,24 @@ const actualizarDatosYScoring = async (req, res) => {
     const idSimulacion = req.params.idSimulacion;
 
     // 2️⃣ Obtener los datos enviados desde el formulario
-    const { salario, rubro, genero, email, telefono } = req.body;
+    const {
+        salario,
+        rubro,
+        genero,
+        nombre,
+        rut,
+        antiguedad
+      } = req.body;
 
     // 3️⃣ Actualizar los campos modificados del cliente
     await pool.query(
       `UPDATE cliente
-       SET salario = $1,
-           rubro = $2,
-           genero = $3,
-           email = $4,
-           telefono = $5
-       WHERE rut = $6`,
-      [salario, rubro, genero, email, telefono, rutCliente]
+      SET salario = $1,
+        rubro = $2,
+        genero = $3
+       WHERE rut = $4`,
+      // [salario, rubro, genero, email, telefono, rutCliente]
+      [salario, rubro, genero, rutCliente]
     );
 
     // 4️⃣ Recalcular el scoring del cliente usando el método ya existente

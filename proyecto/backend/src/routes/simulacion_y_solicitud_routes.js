@@ -1,7 +1,22 @@
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
-const upload = multer();
+
+const storage = multer.diskStorage({
+
+	destination: (req, file, cb) => {
+		cb(null, 'uploads/');
+	},
+
+	filename: (req, file, cb) => {
+		cb(
+			null,
+			Date.now() + '-' + file.originalname
+		);
+	}
+});
+
+const upload = multer({ storage });
 
 
 const registrarSimulacion = require('../controllers/registrarSimulacion');
@@ -54,15 +69,31 @@ router.post('/solicitud/:idSimulacion/datos', async (req, res) => {
 		res.status(500).send('Error al actualizar datos y scoring');
 	}
 });
-// Lectura del pdf
-router.post('/solicitud/:idSimulacion/pdf', upload.single('pdf'), async (req, res) => {
-	try {
-		await solicitudController.subirPDFCliente(req, res);
-	} catch (error) {
-		console.error('Error al procesar PDF:', error);
-		res.status(500).send('Error al procesar PDF');
+// Lectura de documentos
+router.post(
+	'/solicitud/:idSimulacion/pdf',
+
+	upload.fields([
+		{ name: 'carnet', maxCount: 1 },
+		{ name: 'liquidacion', maxCount: 1 },
+		{ name: 'antiguedad', maxCount: 1 },
+	]),
+
+	async (req, res) => {
+		try {
+
+			await solicitudController.subirPDFCliente(req, res);
+
+		} catch (error) {
+
+			console.error('Error al procesar documentos:', error);
+
+			res.status(500).send(
+				'Error al procesar documentos'
+			);
+		}
 	}
-});
+);
 
 // --------------------------
 // ETAPA 4: Confirmar solicitud y evaluar aprobación

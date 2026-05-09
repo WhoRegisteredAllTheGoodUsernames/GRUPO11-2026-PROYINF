@@ -4,105 +4,219 @@ import { back_dir } from "../backend";
 import Navbar from "./navbar";
 
 export default function PdfDatosCliente() {
-    const { idSimulacion } = useParams();
-    const [archivo, setArchivo] = useState(null);
-    const [cargando, setCargando] = useState(false);
-    const navigate = useNavigate();
-    const [dragActive, setDragActive] = useState(false);
-    const handleDragOver = (e) => {
-        e.preventDefault();
-        setDragActive(true);
-        };
 
-    const handleDragLeave = () => {
-        setDragActive(false);
-        };
+  const { idSimulacion } = useParams();
+  const navigate = useNavigate();
 
-    const handleDrop = (e) => {
-        e.preventDefault();
-        setDragActive(false);
+  const [cargando, setCargando] = useState(false);
 
-        const file = e.dataTransfer.files[0];
+  const [carnet, setCarnet] = useState(null);
+  const [liquidacion, setLiquidacion] = useState(null);
+  const [antiguedad, setAntiguedad] = useState(null);
 
-        if (!file) return;
+  const handleUpload = async () => {
 
-        if (file.type !== "application/pdf") {
-            alert("Solo se permiten PDFs");
-            return;
-        }
-
-        setArchivo(file);
-    };
-    const handleUpload = async () => {
-    if (!archivo) {
-      alert("Selecciona un PDF");
+    if (!carnet || !liquidacion || !antiguedad) {
+      alert("Debes subir los 3 documentos requeridos.");
       return;
     }
-
-
 
     setCargando(true);
 
     try {
+
       const formData = new FormData();
-      formData.append("pdf", archivo);
 
-      const res = await fetch(`${back_dir}/solicitud/${idSimulacion}/pdf`, {
-        method: "POST",
-        credentials: "include",
-        body: formData,
-      });
+      formData.append("carnet", carnet);
+      formData.append("liquidacion", liquidacion);
+      formData.append("antiguedad", antiguedad);
 
-      if (!res.ok) {
-        alert("Error al procesar el PDF.");
-        navigate(`/solicitud/${idSimulacion}/datos`);
-        return;
-      }
+      const res = await fetch(
+        `${back_dir}/solicitud/${idSimulacion}/pdf`,
+        {
+          method: "POST",
+          credentials: "include",
+          body: formData,
+        }
+      );
 
       const data = await res.json();
 
-      // 🔴 VALIDACIÓN DE LECTURA
-      if (
-        !data.datos ||
-        data.datos.salario == null ||
-        data.datos.profesion == null ||
-        data.datos.genero == null ||
-        data.datos.rut == null
-      ) {
-        alert("No se pudo leer correctamente el PDF. Intenta nuevamente o ingresa los datos manualmente.");
+      if (!res.ok) {
+
+        console.error(data);
+
+        alert(
+          data.error ||
+          "Error al procesar documentos."
+        );
+
         navigate(`/solicitud/${idSimulacion}/datos`);
         return;
       }
 
+      // VALIDACIÓN
+      const camposRequeridos = [
+        data.datos.nombre,
+        data.datos.rut,
+        data.datos.genero,
+        data.datos.salario,
+        data.datos.profesion,
+        data.datos.antiguedadMeses,
+      ];
+
+      const camposLeidos = camposRequeridos.filter(
+        campo =>
+          campo !== null &&
+          campo !== undefined &&
+          campo !== ""
+      ).length;
+
+      const porcentajeLeido =
+        camposLeidos / camposRequeridos.length;
+
+      if (porcentajeLeido < 0.7) {
+
+        alert(
+          "No se pudieron leer correctamente los documentos.\n\n" +
+          "Verifica que:\n" +
+          "- Los archivos correspondan al tipo solicitado.\n" +
+          "- Los documentos sean legibles.\n" +
+          "- Las imágenes no estén borrosas o cortadas.\n\n" +
+          `Porcentaje de lectura detectado: ${Math.round(porcentajeLeido * 100)}%\n\n` +
+          "Puedes intentar nuevamente con otros documentos o ingresar los datos manualmente."
+        );
+
+        navigate(`/solicitud/${idSimulacion}/datos`);
+
+        return;
+      }
+
+      // ADVERTENCIA GÉNERO
+      if (data.advertencia) {
+        alert(data.advertencia);
+      }
+
+      alert(
+        JSON.stringify(
+          data.datos,
+          null,
+          2
+        )
+      );
+
       const payload = {
+
         salario: data.datos.salario,
+
         rubro: data.datos.profesion,
+
         genero: data.datos.genero,
-        email: data.datos.correo,
-        telefono: data.datos.telefono,
+
+        email: "correo@temporal.cl",
+
+        telefono: "000000000",
       };
 
-      const resDatos = await fetch(`${back_dir}/solicitud/${idSimulacion}/datos`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify(payload),
-      });
+      const resDatos = await fetch(
+        `${back_dir}/solicitud/${idSimulacion}/datos`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          credentials: "include",
+          body: JSON.stringify(payload),
+        }
+      );
 
-      if (!resDatos.ok) throw new Error("Error al guardar datos");
+      if (!resDatos.ok) {
+        throw new Error(
+          "Error al guardar datos"
+        );
+      }
 
-      navigate(`/solicitud/${idSimulacion}/confirmar`);
+      navigate(
+        `/solicitud/${idSimulacion}/confirmar`
+      );
 
     } catch (err) {
+
       console.error(err);
-      alert("Error al leer el PDF.");
+
+      alert(
+        "Error al leer los documentos."
+      );
+
       navigate(`/solicitud/${idSimulacion}/datos`);
+
     } finally {
+
       setCargando(false);
     }
   };
 
+  const renderDropzone = (
+    titulo,
+    archivo,
+    setArchivo,
+    accept
+  ) => (
+
+    <label
+      style={{
+        display: "block",
+        border: "2px dashed #312F55",
+        borderRadius: "12px",
+        padding: "25px",
+        cursor: "pointer",
+        backgroundColor: archivo
+          ? "#e8e9f3"
+          : "#f8f8fb",
+        transition: "all 0.2s",
+        marginBottom: "20px",
+      }}
+    >
+
+      <input
+        type="file"
+        accept={accept}
+        style={{ display: "none" }}
+        onChange={(e) =>
+          setArchivo(e.target.files[0])
+        }
+      />
+
+      <p
+        style={{
+          margin: 0,
+          fontWeight: "bold",
+          color: "#1C142E",
+          fontSize: "16px",
+        }}
+      >
+        {titulo}
+      </p>
+
+      <p
+        style={{
+          fontSize: "14px",
+          color: "#555",
+          marginTop: "10px",
+        }}
+      >
+        {
+          archivo
+            ? archivo.name
+            : "Haz click para seleccionar archivo"
+        }
+      </p>
+
+    </label>
+  );
+
   return (
+
     <div
       style={{
         fontFamily: "Arial, Helvetica, sans-serif",
@@ -112,6 +226,7 @@ export default function PdfDatosCliente() {
         flexDirection: "column",
       }}
     >
+
       <Navbar />
 
       <main
@@ -124,71 +239,97 @@ export default function PdfDatosCliente() {
           padding: "40px 20px",
         }}
       >
+
         <div
           style={{
             backgroundColor: "#CCCDD2",
             padding: "40px",
             borderRadius: "18px",
-            boxShadow: "0px 2px 6px rgba(0,0,0,0.1)",
-            textAlign: "center",
-            width: "min(90%, 500px)",
+            boxShadow:
+              "0px 2px 6px rgba(0,0,0,0.1)",
+            width: "min(95%, 650px)",
           }}
         >
-          <h2 style={{ color: "#1C142E", marginBottom: "25px" }}>
-            Subir PDF del cliente
+
+          <h2
+            style={{
+              color: "#1C142E",
+              marginBottom: "10px",
+              textAlign: "center",
+            }}
+          >
+            Subir documentos del cliente
           </h2>
 
-          {/* Dropzone */}
-            <label
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
+          <p
             style={{
-                display: "block",
-                border: "2px dashed #312F55",
-                borderRadius: "12px",
-                padding: "40px 20px",
-                cursor: "pointer",
-                backgroundColor: dragActive
-                ? "#dcdff5"
-                : archivo
-                ? "#e8e9f3"
-                : "#f8f8fb",
-                transition: "all 0.2s",
-                marginBottom: "20px",
+              textAlign: "center",
+              color: "#444",
+              marginBottom: "30px",
             }}
-            >
-            <input
-              type="file"
-              accept="application/pdf"
-              style={{ display: "none" }}
-              onChange={(e) => setArchivo(e.target.files[0])}
-            />
-
-            <p style={{ margin: 0, fontWeight: "bold", color: "#1C142E" }}>
-              {archivo ? archivo.name : "Haz click para seleccionar un PDF"}
-            </p>
-
-            <p style={{ fontSize: "14px", color: "#555", marginTop: "8px" }}>
-              Formato permitido: PDF
-            </p>
-          </label>
-
-          {/* Botón */}
-          <button
-            onClick={handleUpload}
-            disabled={cargando}
-            style={buttonStyle}
-            onMouseEnter={(e) =>
-              (e.target.style.backgroundColor = "#5b608cff")
-            }
-            onMouseLeave={(e) =>
-              (e.target.style.backgroundColor = "#312F55")
-            }
           >
-            {cargando ? "Procesando..." : "Procesar PDF"}
-          </button>
+            Debes subir:
+            carnet,
+            liquidación
+            y certificado de antigüedad laboral.
+          </p>
+
+          {renderDropzone(
+            "Carnet (imagen)",
+            carnet,
+            setCarnet,
+            "image/*"
+          )}
+
+          {renderDropzone(
+            "Liquidación de sueldo (PDF)",
+            liquidacion,
+            setLiquidacion,
+            "application/pdf"
+          )}
+
+          {renderDropzone(
+            "Certificado de antigüedad laboral (PDF)",
+            antiguedad,
+            setAntiguedad,
+            "application/pdf"
+          )}
+
+          <div
+            style={{
+              textAlign: "center",
+              marginTop: "10px",
+            }}
+          >
+
+            <button
+              onClick={handleUpload}
+              disabled={cargando}
+              style={buttonStyle}
+              onMouseEnter={(e) =>
+                (
+                  e.target.style.backgroundColor =
+                  "#5b608cff"
+                )
+              }
+              onMouseLeave={(e) =>
+                (
+                  e.target.style.backgroundColor =
+                  "#312F55"
+                )
+              }
+            >
+              {
+                cargando
+                  ? "Procesando..."
+                  : "Procesar documentos"
+              }
+            </button>
+
+          </div>
+
         </div>
+
       </main>
 
       <footer
@@ -202,6 +343,7 @@ export default function PdfDatosCliente() {
       >
         © 2025 Préstamos de Consumo Digital
       </footer>
+
     </div>
   );
 }
@@ -219,4 +361,3 @@ const buttonStyle = {
   cursor: "pointer",
   transition: "background-color 0.2s",
 };
-
