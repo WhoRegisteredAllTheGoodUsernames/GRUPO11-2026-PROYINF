@@ -45,11 +45,11 @@ function handleValorString(variable, valor) {
 	let valorMapeado = cualitativa[valor];
 
 	if (valorMapeado === undefined){
-		if (!utilsTipos.admiteValorNada(variable)){
-			throw `La variable ${variable} no admite el valor ${valor}`;
-		} else {
+		if (utilsTipos.admiteValorNada(variable)){
 			console.warn(`⚠️ Valor no reconocido para ${variable} ("${valor}"), se usará "Nada".`);
 			return cualitativa["Nada"];
+		} else {
+			throw `La variable ${variable} no admite el valor ${valor}`;
 		}
 	}
 
