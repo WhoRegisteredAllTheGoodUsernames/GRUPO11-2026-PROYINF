@@ -5,7 +5,10 @@ WORKDIR /app/frontend
 COPY package*.json ./
 RUN npm install
 
-COPY . .
+COPY ./src /src
+COPY ./public /public
+COPY ./package.json /
+COPY ./package-lock.json /
 
 # Instalar wait-port globalmente
 RUN npm install -g wait-port

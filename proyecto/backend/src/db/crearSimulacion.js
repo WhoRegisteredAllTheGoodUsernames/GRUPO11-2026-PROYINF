@@ -10,7 +10,7 @@
 // module.exports = sql;
 
 
-sql = {
+const sql = {
   "crearSimulacion": `
     INSERT INTO "simulacion-prestamo"
     (fecha, monto, "numero-cuotas", "tasa-interes", "scoring-requerido", "rut-cliente", "id-funcion-crediticia", seguro)

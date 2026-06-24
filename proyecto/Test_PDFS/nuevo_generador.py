@@ -18,7 +18,7 @@ def pedir_entero(msg):
     while True:
         try:
             return int(input(msg).strip())
-        except:
+        except ValueError:
             print("Ingrese un número válido")
 
 

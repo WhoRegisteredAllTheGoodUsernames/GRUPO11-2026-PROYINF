@@ -1,4 +1,4 @@
-sql = {
+const sql = {
 	"crearScoring": `
 		INSERT INTO "funcion-crediticia"
 		(funcion, "fecha-modificacion", "rut-bancario-modificador")

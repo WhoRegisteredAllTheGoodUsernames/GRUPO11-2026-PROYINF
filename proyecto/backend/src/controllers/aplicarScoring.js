@@ -8,7 +8,7 @@ const utilsTipos = require("../utils/verificarTipos");
 const descFactoresRegEx = new RegExp(/([+-]?)([0-9.]*)([a-zA-Z_]+)?/, "g"); 
 
 function descomponerFuncion(funct){
-	var componentes = {};
+	const componentes = {};
 	// El arreglo es de la forma:
 	// ["matcheo1", "grupo1 en matcheo1", "grupo2 en matcheo1", "grupo3 en matcheo1",
 	// "matcheo2" ...]
@@ -37,6 +37,25 @@ function descomponerFuncion(funct){
 	return componentes;
 }
 
+function handleValorString(variable, valor) {
+	if (!utilsTipos.esCualitativa(variable))
+		throw `La variable ${variable} no es cualitativa`;
+
+	const cualitativa = scoring.valoresCualitativos[variable];
+	let valorMapeado = cualitativa[valor];
+
+	if (valorMapeado === undefined){
+		if (!utilsTipos.admiteValorNada(variable)){
+			throw `La variable ${variable} no admite el valor ${valor}`;
+		} else {
+			console.warn(`⚠️ Valor no reconocido para ${variable} ("${valor}"), se usará "Nada".`);
+			return cualitativa["Nada"];
+		}
+	}
+
+	return valorMapeado;
+}
+
 function obtenerSumaFuncion(funct, valores) {
 	let acumulador = 0;
 
@@ -50,22 +69,7 @@ function obtenerSumaFuncion(funct, valores) {
 		if (valor === undefined) throw `Falta el valor para la variable ${variable}`;
 
 		if (utilsTipos.esString(valor)) {
-			const cualitativa = scoring.valoresCualitativos[variable];
-			if (cualitativa === undefined)
-				throw `La variable ${variable} no es cualitativa`;
-
-			let valorMapeado = cualitativa[valor];
-
-			// 🧩 Si el valor no está en el diccionario, usar "Nada" como fallback
-			if (valorMapeado === undefined && cualitativa["Nada"] !== undefined) {
-				console.warn(`⚠️ Valor no reconocido para ${variable} ("${valor}"), se usará "Nada".`);
-				valorMapeado = cualitativa["Nada"];
-			}
-
-			if (valorMapeado === undefined)
-				throw `La variable ${variable} no admite el valor ${valor}`;
-
-			valor = valorMapeado;
+			valor = handleValorString(variable, valor);
 		}
 
 		const aporte = param * valor;

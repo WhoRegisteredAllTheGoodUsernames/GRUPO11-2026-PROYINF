@@ -5,7 +5,12 @@ WORKDIR /app/backend
 COPY package*.json ./
 RUN npm install
 
-COPY . .
+COPY ./src /src
+COPY ./index.js /
+COPY ./package.json /
+COPY ./package-lock.json /
+COPY ./pruebaa.pdf /
+COPY ./spa.traineddata /
 
 # Instalar wait-port globalmente
 RUN npm install -g wait-port
